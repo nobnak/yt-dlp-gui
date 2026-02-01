@@ -1,4 +1,4 @@
-﻿using Libs;
+using Libs;
 using Libs.Yaml;
 using Microsoft.Toolkit.Uwp.Notifications;
 using Newtonsoft.Json;
@@ -516,9 +516,12 @@ namespace yt_dlp_gui.Views {
                             DownloadType.Audio => 2,
                             _ => 0
                         };
-                        dlp.Exec(std => {
-                            repoter.GetStatus(std);
-                        });
+                        const int maxRetries = 5;
+                        for (int retry = 0; retry < maxRetries; retry++) {
+                            var p = dlp.Exec(std => repoter.GetStatus(std));
+                            if (p == null || p.ExitCode == 0 || Data.IsAbouted) break;
+                            if (retry < maxRetries - 1) Thread.Sleep(3000);
+                        }
                     }));
                     //WaitAll Downloads, Merger Video and Audio
                     Data.CanCancel = true;

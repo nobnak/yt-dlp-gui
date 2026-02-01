@@ -1,4 +1,4 @@
-﻿using Libs;
+using Libs;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -31,6 +31,8 @@ namespace yt_dlp_gui.Wrappers {
             //Options["--no-part"] = "";
             Options["--force-overwrites"] = "";
             Options["--ignore-config"] = "";
+            Options["--retries"] = "10";
+            Options["--fragment-retries"] = "10";
             Options["--ffmpeg-location"] = Path_FFMPEG.QP();
             if (Type == DLPType.yd_dlp) {
                 Options["--progress-template"] = "\""
@@ -262,9 +264,8 @@ namespace yt_dlp_gui.Wrappers {
         private static Regex ErrUnsupported = new Regex(@"^(?=.*?ERROR)(?=.*?Unsupported)", RegexOptions.IgnoreCase);
         public Process Exec(Action<string> stdall = null, Action<string> stdout = null, Action<string> stderr = null) {
             var fn = Path_DLP;
-            if (!File.Exists(fn)) {
-                return null;
-            }
+            if (!File.Exists(fn)) return null;
+            process = new Process();
             var info = new ProcessStartInfo() {
                 FileName = fn,
                 Arguments = Args,
