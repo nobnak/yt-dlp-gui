@@ -41,6 +41,7 @@ Main:
   AudioSampleRate: ASR
   AudioExt: 拡張子
   AudioCodec: コーデック
+  AudioLang: 言語
   AudioSize: サイズ
   # Main Tab - Subtitle
   Subtitle: 字幕

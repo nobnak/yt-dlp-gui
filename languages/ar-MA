@@ -42,6 +42,7 @@ Main:
   AudioSampleRate: معدل العينات الصوتية
   AudioExt: الامتداد
   AudioCodec: الترميز
+  AudioLang: اللغة
   AudioSize: حجم الملف
   # تبويب الرئيسي - الترجمة
   Subtitle: الترجمة

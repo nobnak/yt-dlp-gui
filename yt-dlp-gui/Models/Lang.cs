@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Windows.Forms;
@@ -131,7 +131,8 @@ namespace yt_dlp_gui.Models {
         [YamlMember(Order = 1062)] public string AudioSampleRate { get; set; } = "ASR";
         [YamlMember(Order = 1063)] public string AudioExt { get; set; } = "Ext.";
         [YamlMember(Order = 1064)] public string AudioCodec { get; set; } = "Codec";
-        [YamlMember(Order = 1065)] public string AudioSize { get; set; } = "FileSize";
+        [YamlMember(Order = 1065)] public string AudioLang { get; set; } = "Lang";
+        [YamlMember(Order = 1066)] public string AudioSize { get; set; } = "FileSize";
 
         [Description("Main Tab - Subtitle")]
         [YamlMember(Order = 1071)] public string Subtitle { get; set; } = "Subtitle";

@@ -1,4 +1,4 @@
-﻿# Name
+# Name
 AppName: yt-dlp-gui (Polski)
 # Window - Main
 Main:
@@ -42,6 +42,7 @@ Main:
   AudioSampleRate: Rozdziel.
   AudioExt: Roz.
   AudioCodec: Kodek
+  AudioLang: Język
   AudioSize: Wielkość
   # Main Tab - Subtitle
   Subtitle: Napisy

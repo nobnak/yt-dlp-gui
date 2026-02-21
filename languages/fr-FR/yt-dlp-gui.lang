@@ -42,6 +42,7 @@ Main:
   AudioSampleRate: ASR
   AudioExt: Ext.
   AudioCodec: Codec
+  AudioLang: Langue
   AudioSize: Taille fichier
   # Main Tab - Subtitle
   Subtitle: Sous-titre

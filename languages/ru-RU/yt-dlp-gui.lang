@@ -1,4 +1,4 @@
-﻿AppName: yt-dlp-gui
+AppName: yt-dlp-gui
 Main:
   # Базовые
   Url: Ссылка
@@ -27,6 +27,7 @@ Main:
   Audio Sample Rate: ASR
   AudioExt: Расш.
   AudioCodec: Кодек
+  AudioLang: Язык
   AudioSize: Размер файла
   # Вкладка "Расширенные"
   Advance: Расширенные

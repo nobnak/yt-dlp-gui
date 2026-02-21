@@ -27,6 +27,7 @@ Main:
   AudioSampleRate: ASR
   AudioExt: Ext.
   AudioCodec: Codec
+  AudioLang: Sprache
   AudioSize: Dateigröße
   # Tab Advance
   Advance: Erweitert

@@ -42,6 +42,7 @@ Main:
   AudioSampleRate: 音频采样率
   AudioExt: 音频格式
   AudioCodec: 音频编码
+  AudioLang: 语言
   AudioSize: 音频大小
   # Main Tab - Subtitle
   Subtitle: 字幕

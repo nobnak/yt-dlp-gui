@@ -42,6 +42,7 @@ Main:
   AudioSampleRate: ASR
   AudioExt: Ext
   AudioCodec: Кодек
+  AudioLang: Мова
   AudioSize: Розмір
   # Main Tab - Subtitle
   Subtitle: Субтитри

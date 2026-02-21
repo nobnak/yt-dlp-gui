@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -32,6 +32,10 @@
     <None Remove="Resources\logo.ico" />
     <None Remove="Resources\xshd\desc.xshd" />
     <None Remove="Resources\xshd\url.xshd" />
+  </ItemGroup>
+  <!-- 多言語ファイルを出力にコピー（languages\ja-JP\ 等 → (OutputPath)\languages\ja-JP\） -->
+  <ItemGroup>
+    <None Include="..\languages\**\*" Link="languages\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,4 +1,4 @@
-﻿# Name
+# Name
 AppName: yt-dlp-gui (繁體中文)
 # Window - Main
 Main:
@@ -42,6 +42,7 @@ Main:
   AudioSampleRate: 採樣
   AudioExt: 格式
   AudioCodec: 編碼
+  AudioLang: 語言
   AudioSize: 容量
   # Main Tab - Subtitle
   Subtitle: 字幕

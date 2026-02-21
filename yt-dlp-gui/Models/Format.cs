@@ -1,4 +1,4 @@
-﻿using Swordfish.NET.Collections;
+using Swordfish.NET.Collections;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -25,6 +25,7 @@ namespace yt_dlp_gui.Models {
         public string container { get; set; } = string.Empty;
         public string audio_ext { get; set; } = "none";
         public string video_ext { get; set; } = "none";
+        public string? language { get; set; } = null;
         public FormatType type { get; set; } = FormatType.other;
         public string format { get; set; } = string.Empty;
         public string resolution { get; set; } = string.Empty;

@@ -42,6 +42,7 @@ Main:
   AudioSampleRate: ASR
   AudioExt: Επεκτ.
   AudioCodec: Κωδικοποιητής
+  AudioLang: Γλώσσα
   AudioSize: Μέγεθος αρχείου
   # Main Tab - Subtitle
   Subtitle: Υπότιτλοι

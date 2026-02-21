@@ -1,4 +1,4 @@
-﻿# Name
+# Name
 AppName: yt-dlp-gui (한국어)
 # Window - Main
 Main:
@@ -42,6 +42,7 @@ Main:
   AudioSampleRate: ASR
   AudioExt: 확장자
   AudioCodec: 코덱
+  AudioLang: 언어
   AudioSize: 파일 크기
   # Main Tab - Subtitle
   Subtitle: 자막
