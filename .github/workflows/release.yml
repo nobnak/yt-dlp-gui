@@ -1,0 +1,64 @@
+name: Release (Any CPU / WPF)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore
+        run: dotnet restore yt-dlp-gui.sln
+
+      - name: Publish (Release, Any CPU, framework-dependent)
+        run: >
+          dotnet publish yt-dlp-gui/yt-dlp-gui.csproj
+          -c Release
+          --self-contained false
+          -p:PublishSingleFile=true
+          -p:PublishReadyToRun=true
+
+      - name: Zip publish output
+        run: |
+          $publishDir = "yt-dlp-gui\bin\Release\net9.0-windows10.0.17763.0\publish"
+          Compress-Archive -Path "$publishDir\*" -DestinationPath "yt-dlp-gui-anycpu.zip" -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yt-dlp-gui-anycpu
+          path: yt-dlp-gui-anycpu.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: yt-dlp-gui-anycpu
+
+      - name: Rename zip with version
+        run: mv yt-dlp-gui-anycpu.zip "yt-dlp-gui-${{ github.ref_name }}-anycpu.zip"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "yt-dlp-gui-${{ github.ref_name }}-anycpu.zip"
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
