@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -43,7 +43,7 @@ namespace Libs {
             var res = client.Send(new HttpRequestMessage(HttpMethod.Head, uri));
             return res.StatusCode == System.Net.HttpStatusCode.OK;
         }
-        public static async Task<List<GitRelease>> GetLastTag() {
+        public static async Task<List<GitRelease>?> GetLastTag() {
             var res = await Load(@"https://api.github.com/repos/Kannagi0303/yt-dlp-gui/releases");
             if (!string.IsNullOrWhiteSpace(res.content)) {
                 try {
@@ -52,7 +52,7 @@ namespace Libs {
             }
             return null;
         }
-        public static async Task Download(string downloadUrl, string savePath, IProgress<double> progress = null, string proxyUrl = null) {
+        public static async Task Download(string downloadUrl, string savePath, IProgress<double>? progress = null, string? proxyUrl = null) {
             Debug.WriteLine($"save {downloadUrl} to {savePath} use {proxyUrl}");
             var httpClientHandler = new HttpClientHandler();
             if (!string.IsNullOrEmpty(proxyUrl)) {

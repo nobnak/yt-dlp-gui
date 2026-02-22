@@ -1,4 +1,4 @@
-﻿using ICSharpCode.AvalonEdit.Highlighting.Xshd;
+using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using ICSharpCode.AvalonEdit.Highlighting;
 using System;
 using System.Diagnostics;
@@ -49,7 +49,7 @@ namespace Libs.Yaml {
         public static void Save(string path, object graph) {
             FileInfo info = new FileInfo(path);
             try {
-                Directory.CreateDirectory(info.DirectoryName);
+                Directory.CreateDirectory(info.DirectoryName!);
                 using (var yaml = new StreamWriter(info.FullName, false, Encoding.UTF8)) {
                     var s = new SerializerBuilder()
                     .WithTypeInspector(inner => new CommentGatheringTypeInspector(inner))
@@ -67,8 +67,10 @@ namespace Libs.Yaml {
                 //泛型呼叫
                 var func = mi.MakeGenericMethod(new[] { obj.GetType() });
                 var data = func.Invoke(null, new[] { path }) as IYamlConfig; //参数
-                Util.PropertyCopy(data, obj);
-                obj._YAMLPATH = path;
+                if (data != null) {
+                    Util.PropertyCopy(data, obj);
+                    obj._YAMLPATH = path;
+                }
             }
         }
         public static void Save(this IYamlConfig obj, string path = "") {
@@ -79,6 +81,6 @@ namespace Libs.Yaml {
         }
     }
     public class IYamlConfig {
-        [YamlIgnore] public string _YAMLPATH { get; set; }
+        [YamlIgnore] public string? _YAMLPATH { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -21,7 +21,7 @@ namespace Libs.Yaml {
             this.innerTypeDescriptor = innerTypeDescriptor;
         }
 
-        public override IEnumerable<IPropertyDescriptor> GetProperties(Type type, object container) {
+        public override IEnumerable<IPropertyDescriptor> GetProperties(Type type, object? container) {
             return innerTypeDescriptor
                 .GetProperties(type, container)
                 .Select(d => new CommentsPropertyDescriptor(d));
@@ -39,7 +39,7 @@ namespace Libs.Yaml {
 
             public Type Type { get { return baseDescriptor.Type; } }
 
-            public Type TypeOverride {
+            public Type? TypeOverride {
                 get { return baseDescriptor.TypeOverride; }
                 set { baseDescriptor.TypeOverride = value; }
             }
@@ -53,7 +53,7 @@ namespace Libs.Yaml {
 
             public bool CanWrite { get { return baseDescriptor.CanWrite; } }
 
-            public void Write(object target, object value) {
+            public void Write(object target, object? value) {
                 baseDescriptor.Write(target, value);
             }
 
@@ -119,7 +119,7 @@ namespace Libs.Yaml {
             _innerTypeInspector = innerTypeInspector;
         }
 
-        public override IEnumerable<IPropertyDescriptor> GetProperties(Type type, object container) {
+        public override IEnumerable<IPropertyDescriptor> GetProperties(Type type, object? container) {
             return _innerTypeInspector.GetProperties(type, container).OrderBy(x => x.Name);
         }
     }
