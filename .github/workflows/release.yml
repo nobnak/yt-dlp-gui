@@ -35,7 +35,7 @@ jobs:
 
       - name: Zip publish output
         run: |
-          $publishDir = Join-Path $env:SOLUTION_ROOT "yt-dlp-gui\yt-dlp-gui\bin\Release\net9.0-windows10.0.17763.0\publish"
+          $publishDir = Join-Path $env:SOLUTION_ROOT "yt-dlp-gui\bin\Release\net9.0-windows10.0.17763.0\win-x64\publish"
           Compress-Archive -Path "$publishDir\*" -DestinationPath (Join-Path $env:SOLUTION_ROOT "yt-dlp-gui-anycpu.zip") -Force
 
       - name: Upload artifact
