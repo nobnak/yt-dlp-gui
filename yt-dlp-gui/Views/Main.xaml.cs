@@ -307,65 +307,77 @@ namespace yt_dlp_gui.Views {
                     //取得JSON
                     Data.Video = JsonConvert.DeserializeObject<Video>(std, new JsonSerializerSettings() {
                         NullValueHandling = NullValueHandling.Ignore
-                    });
-                } catch { return; }
+                    }) ?? new Video();
 
-                //Reading Chapters
-                {
-                    Data.Chapters.Clear();
-                    if (Data.Video.chapters != null && Data.Video.chapters.Any()) {
-                        Data.Chapters.Add(new Chapters() { title = App.Lang.Main.ChaptersAll, type = ChaptersType.None });
-                        Data.Chapters.Add(new Chapters() { title = App.Lang.Main.ChaptersSplite, type = ChaptersType.Split });
-                        Data.Chapters.AddRange(Data.Video.chapters);
-                        Data.hasChapter = true;
-                    } else {
-                        Data.Chapters.Add(new Chapters() { title = App.Lang.Main.ChaptersNone, type = ChaptersType.None });
-                        Data.hasChapter = false;
+                    //Reading Chapters
+                    {
+                        Data.Chapters.Clear();
+                        if (Data.Video.chapters != null && Data.Video.chapters.Any()) {
+                            Data.Chapters.Add(new Chapters() { title = App.Lang.Main.ChaptersAll, type = ChaptersType.None });
+                            Data.Chapters.Add(new Chapters() { title = App.Lang.Main.ChaptersSplite, type = ChaptersType.Split });
+                            Data.Chapters.AddRange(Data.Video.chapters);
+                            Data.hasChapter = true;
+                        } else {
+                            Data.Chapters.Add(new Chapters() { title = App.Lang.Main.ChaptersNone, type = ChaptersType.None });
+                            Data.hasChapter = false;
+                        }
+                        //Data.selectedChapter = Data.Chapters.First();
                     }
-                    //Data.selectedChapter = Data.Chapters.First();
-                }
-                //读取 Formats 与 Thumbnails
-                {
-                    //Debug.WriteLine(JsonConvert.SerializeObject(Data.Video.chapters, Formatting.Indented));
-                    Data.Formats.LoadFromVideo(Data.Video.formats);
-                    Data.Thumbnails.Reset(Data.Video.thumbnails);
-                    Data.RequestedFormats.LoadFromVideo(Data.Video.requested_formats);
-                }
-                //读取 Subtitles
-                {
-                    var subs = Data.Video.subtitles.Select(x => {
-                        var s = x.Value.FirstOrDefault(y => y.ext == "vtt");
-                        if (s == null) return null;
-                        s.key = x.Key;
-                        return s;
-                    }).Where(x => x != null).ToList();
-                    Data.Subtitles.Clear();
-                    if (subs.Any()) {
-                        Data.Subtitles.Add(new Subs() { name = App.Lang.Main.SubtitleIgnore });
-                        Data.hasSubtitle = true;
-                    } else {
-                        Data.Subtitles.Add(new Subs() { name = App.Lang.Main.SubtitleNone });
-                        Data.hasSubtitle = false;
+                    //读取 Formats 与 Thumbnails
+                    {
+                        //Debug.WriteLine(JsonConvert.SerializeObject(Data.Video.chapters, Formatting.Indented));
+                        if (Data.Video.formats != null) Data.Formats.LoadFromVideo(Data.Video.formats);
+                        if (Data.Video.thumbnails != null) Data.Thumbnails.Reset(Data.Video.thumbnails);
+                        if (Data.Video.requested_formats != null) Data.RequestedFormats.LoadFromVideo(Data.Video.requested_formats);
                     }
-                    Data.Subtitles.AddRange(subs);
-                }
-                var BestUrl = Data.Thumbnails.LastOrDefault()?.url;
-                if (BestUrl != null && Web.Head(BestUrl)) {
-                    Data.Thumbnail = BestUrl;
-                } else {
-                    Data.Thumbnail = Data.Video.thumbnail;
-                }
+                    //读取 Subtitles
+                    {
+                        Data.Subtitles.Clear();
+                        if (Data.Video.subtitles != null && Data.Video.subtitles.Any()) {
+                            var subs = Data.Video.subtitles.Select(x => {
+                                var s = x.Value?.FirstOrDefault(y => y.ext == "vtt" || y.ext == "srv3" || y.ext == "srv2" || y.ext == "srv1" || y.ext == "json3");
+                                if (s == null) return null;
+                                s.key = x.Key;
+                                return s;
+                            }).Where(x => x != null).ToList();
+                            if (subs.Any()) {
+                                Data.Subtitles.Add(new Subs() { name = App.Lang.Main.SubtitleIgnore });
+                                Data.hasSubtitle = true;
+                                Data.Subtitles.AddRange(subs!);
+                            } else {
+                                Data.Subtitles.Add(new Subs() { name = App.Lang.Main.SubtitleNone });
+                                Data.hasSubtitle = false;
+                            }
+                        } else {
+                            Data.Subtitles.Add(new Subs() { name = App.Lang.Main.SubtitleNone });
+                            Data.hasSubtitle = false;
+                        }
+                    }
+                    var BestUrl = Data.Thumbnails.LastOrDefault(x => !x.url.EndsWith(".webp", StringComparison.OrdinalIgnoreCase))?.url
+                                  ?? Data.Thumbnails.LastOrDefault()?.url;
+                    try {
+                        if (BestUrl != null && Web.Head(BestUrl)) {
+                            Data.Thumbnail = BestUrl;
+                        } else {
+                            Data.Thumbnail = Data.Video.thumbnail;
+                        }
+                    } catch {
+                        Data.Thumbnail = Data.Video.thumbnail;
+                    }
 
-                Data.SelectFormatBest(); //Make ComboBox Selected Item
-                var full = string.Empty;
-                if (Path.IsPathRooted(Data.Video._filename)) {
-                    full = Path.GetFullPath(Data.Video._filename);
-                } else {
-                    full = Path.Combine(Data.TargetPath, Data.Video._filename);
+                    Data.SelectFormatBest(); //Make ComboBox Selected Item
+                    var full = string.Empty;
+                    if (!string.IsNullOrWhiteSpace(Data.Video._filename)) {
+                        if (Path.IsPathRooted(Data.Video._filename)) {
+                            full = Path.GetFullPath(Data.Video._filename);
+                        } else {
+                            full = Path.Combine(Data.TargetPath, Data.Video._filename);
+                        }
+                    }
+                    Data.TargetName = full; //预设挡案名称
+                } catch (Exception ex) {
+                    Debug.WriteLine(ex, "GetInfo Error");
                 }
-                //Data.TargetName = GetValidFileName(Data.Video.title) + ".tmp"; //预设挡案名称
-                Data.TargetName = full; //预设挡案名称
-
             });
             dlp.Err(DLP.DLPError.Sign, () => {
                 if (Data.UseCookie == UseCookie.WhenNeeded) {
