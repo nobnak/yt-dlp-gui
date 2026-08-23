@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 using System.Windows;
 
 namespace yt_dlp_gui {
@@ -10,9 +11,10 @@ namespace yt_dlp_gui {
         public static string? AppPath;
         public static string? AppName;
         private void LoadPath() {
-            AppExe = Environment.ProcessPath;
-            AppPath = IoPath.GetDirectoryName(AppExe);
-            AppName = IoPath.GetFileNameWithoutExtension(AppExe);
+            var entryAssembly = Assembly.GetEntryAssembly();
+            AppName = entryAssembly?.GetName().Name ?? "yt-dlp-gui";
+            AppPath = AppContext.BaseDirectory.TrimEnd(IoPath.DirectorySeparatorChar, IoPath.AltDirectorySeparatorChar);
+            AppExe = IoPath.Combine(AppPath, AppName + ".exe");
         }
         public static string Path(Folders type, params string[] pathpart) {
             //var exe = Environment.ProcessPath;

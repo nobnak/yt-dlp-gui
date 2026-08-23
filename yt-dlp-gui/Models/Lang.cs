@@ -43,6 +43,7 @@ namespace yt_dlp_gui.Models {
         public string Downloading { get; set; } = "Downloading";
         public string Downloaded { get; set; } = "Downloaded";
         public string Done { get; set; } = "Done";
+        public string Error { get; set; } = "Error";
     }
     public class LangFiles :INotifyPropertyChanged {
         public event PropertyChangedEventHandler? PropertyChanged;

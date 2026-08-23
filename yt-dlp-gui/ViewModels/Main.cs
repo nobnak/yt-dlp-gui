@@ -1,4 +1,4 @@
-﻿using Libs;
+using Libs;
 using Libs.Yaml;
 using Swordfish.NET.Collections;
 using System.Collections.Generic;
@@ -457,17 +457,57 @@ namespace yt_dlp_gui.Views {
                         // yt-dlp
                         if (!Data.DNStatus_Infos.ContainsKey("Downloader")) Data.DNStatus_Infos["Downloader"] = App.Lang.Status.Native;
                         var d = std.Split(',');
-                        if (decimal.TryParse(d[4], CultureInfo.InvariantCulture, out decimal d_total)) {
-                            s.Total = d_total;
-                            s.Persent = decimal.Parse(d[3]) / d_total * 100; ;
-                        } else {
-                            if (decimal.TryParse(d[1].TrimEnd('%'), CultureInfo.InvariantCulture, out decimal d_persent)) {
-                                s.Persent = d_persent;
+                        if (d.Length >= 11) {
+                            var fid = d[1];
+                            if (fid == Data.selectedVideo.format_id && Data.selectedVideo.format_id != Data.selectedAudio.format_id) {
+                                type = 1;
+                                s = Data.DNStatus_Video;
+                            } else if (fid == Data.selectedAudio.format_id && Data.selectedVideo.format_id != Data.selectedAudio.format_id) {
+                                type = 2;
+                                s = Data.DNStatus_Audio;
                             }
+
+                            if (decimal.TryParse(d[5], CultureInfo.InvariantCulture, out decimal d_total) && d_total > 0) {
+                                s.Total = d_total;
+                                if (decimal.TryParse(d[4], CultureInfo.InvariantCulture, out decimal d_dl)) {
+                                    s.Downloaded = d_dl;
+                                    s.Persent = d_dl / d_total * 100;
+                                }
+                            } else if (decimal.TryParse(d[6], CultureInfo.InvariantCulture, out decimal d_total_est) && d_total_est > 0) {
+                                s.Total = d_total_est;
+                                if (decimal.TryParse(d[4], CultureInfo.InvariantCulture, out decimal d_dl)) {
+                                    s.Downloaded = d_dl;
+                                    s.Persent = d_dl / d_total_est * 100;
+                                }
+                            } else if (decimal.TryParse(d[9], CultureInfo.InvariantCulture, out decimal d_frag_idx) &&
+                                       decimal.TryParse(d[10], CultureInfo.InvariantCulture, out decimal d_frag_cnt) && d_frag_cnt > 0) {
+                                s.Persent = d_frag_idx / d_frag_cnt * 100;
+                                if (decimal.TryParse(d[4], CultureInfo.InvariantCulture, out decimal d_dl)) s.Downloaded = d_dl;
+                            } else {
+                                if (decimal.TryParse(d[2].TrimEnd('%'), CultureInfo.InvariantCulture, out decimal d_persent)) {
+                                    s.Persent = d_persent;
+                                }
+                                if (decimal.TryParse(d[4], CultureInfo.InvariantCulture, out decimal d_dl)) s.Downloaded = d_dl;
+                            }
+
+                            if (decimal.TryParse(d[7], CultureInfo.InvariantCulture, out decimal d_speed)) s.Speed = d_speed;
+                            if (decimal.TryParse(d[8], CultureInfo.InvariantCulture, out decimal d_elapsed)) s.Elapsed = d_elapsed;
+                        } else {
+                            if (decimal.TryParse(d[4], CultureInfo.InvariantCulture, out decimal d_total) && d_total > 0) {
+                                s.Total = d_total;
+                                if (decimal.TryParse(d[3], CultureInfo.InvariantCulture, out decimal d_dl)) {
+                                    s.Downloaded = d_dl;
+                                    s.Persent = d_dl / d_total * 100;
+                                }
+                            } else {
+                                if (decimal.TryParse(d[1].TrimEnd('%'), CultureInfo.InvariantCulture, out decimal d_persent)) {
+                                    s.Persent = d_persent;
+                                }
+                                if (decimal.TryParse(d[3], CultureInfo.InvariantCulture, out decimal d_dl)) s.Downloaded = d_dl;
+                            }
+                            if (decimal.TryParse(d[5], CultureInfo.InvariantCulture, out decimal d_speed)) s.Speed = d_speed;
+                            if (decimal.TryParse(d[6], CultureInfo.InvariantCulture, out decimal d_elapsed)) s.Elapsed = d_elapsed;
                         }
-                        s.Downloaded = decimal.Parse(d[3]);
-                        if (decimal.TryParse(d[5], CultureInfo.InvariantCulture, out decimal d_speed)) s.Speed = d_speed;
-                        if (decimal.TryParse(d[6], CultureInfo.InvariantCulture, out decimal d_elapsed)) s.Elapsed = d_elapsed;
 
                         UpdatePersent(s.Persent);
 

@@ -302,10 +302,13 @@ namespace yt_dlp_gui.Views {
             if (Data.UseOutput) dlp.Output(Data.FileNameFormat); //if not used config, default template
             ClearStatus();
             dlp.Exec(null, std => {
-                //取得JSON
-                Data.Video = JsonConvert.DeserializeObject<Video>(std, new JsonSerializerSettings() {
-                    NullValueHandling = NullValueHandling.Ignore
-                });
+                if (string.IsNullOrWhiteSpace(std) || !std.TrimStart().StartsWith("{")) return;
+                try {
+                    //取得JSON
+                    Data.Video = JsonConvert.DeserializeObject<Video>(std, new JsonSerializerSettings() {
+                        NullValueHandling = NullValueHandling.Ignore
+                    });
+                } catch { return; }
 
                 //Reading Chapters
                 {
@@ -464,6 +467,7 @@ namespace yt_dlp_gui.Views {
                 ClearStatus();
                 _ = Task.Run(() => {
                     var dlp = new DLP(Data.Url);
+                    Process? lastProcess = null;
                     List<Task> tasks = new();
                     tasks.Add(Task.Run(() => {
                         //var dlp = new DLP(Data.Url);
@@ -516,10 +520,10 @@ namespace yt_dlp_gui.Views {
                             DownloadType.Audio => 2,
                             _ => 0
                         };
-                        const int maxRetries = 5;
+                        const int maxRetries = 3;
                         for (int retry = 0; retry < maxRetries; retry++) {
-                            var p = dlp.Exec(std => repoter.GetStatus(std));
-                            if (p == null || p.ExitCode == 0 || Data.IsAbouted) break;
+                            lastProcess = dlp.Exec(std => repoter.GetStatus(std));
+                            if (lastProcess == null || lastProcess.ExitCode == 0 || Data.IsAbouted) break;
                             if (retry < maxRetries - 1) Thread.Sleep(3000);
                         }
                     }));
@@ -527,55 +531,60 @@ namespace yt_dlp_gui.Views {
                     Data.CanCancel = true;
                     Task.WaitAll(tasks.ToArray());
                     if (!Data.IsAbouted) {
-                        Data.DNStatus_Infos["Status"] = App.Lang.Status.Done;
+                        var success = lastProcess != null && lastProcess.ExitCode == 0;
+                        if (success) {
+                            Data.DNStatus_Infos["Status"] = App.Lang.Status.Done;
 
-                        //post-process
-                        Dictionary<string, string> files = new Dictionary<string, string>();
-                        foreach (string donepath in dlp.Files) {
-                            if (File.Exists(donepath)) {
-                                if (donepath.isVideo()) files["video"] = donepath;
-                                if (donepath.isImage()) files["thumb"] = donepath;
-                                if (Data.ModifiedType == ModifiedType.Upload) {
-                                    if (DateTimeOffset.TryParseExact(Data.Video.upload_date, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTimeOffset tryDate)) {
-                                        File.SetLastWriteTimeUtc(donepath, tryDate.DateTime);
+                            //post-process
+                            Dictionary<string, string> files = new Dictionary<string, string>();
+                            foreach (string donepath in dlp.Files) {
+                                if (File.Exists(donepath)) {
+                                    if (donepath.isVideo()) files["video"] = donepath;
+                                    if (donepath.isImage()) files["thumb"] = donepath;
+                                    if (Data.ModifiedType == ModifiedType.Upload) {
+                                        if (DateTimeOffset.TryParseExact(Data.Video.upload_date, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTimeOffset tryDate)) {
+                                            File.SetLastWriteTimeUtc(donepath, tryDate.DateTime);
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        //Send notification when download completed
-                        try {
-                            if (Data.UseNotifications) {
-                                Util.NotifySound(Data.PathNotify);
-                                var toast = new ToastContentBuilder()
-                                    .AddText(Data.Video.title)
-                                    .AddText(App.Lang.Dialog.DownloadCompleted)
-                                    .AddAudio(new ToastAudio() {
-                                        Silent = true,
-                                        Loop = false,
-                                        Src = new Uri("ms-winsoundevent:Notification.Default")
-                                    });
-                                if (files.ContainsKey("video")) {
+                            //Send notification when download completed
+                            try {
+                                if (Data.UseNotifications) {
+                                    Util.NotifySound(Data.PathNotify);
+                                    var toast = new ToastContentBuilder()
+                                        .AddText(Data.Video.title)
+                                        .AddText(App.Lang.Dialog.DownloadCompleted)
+                                        .AddAudio(new ToastAudio() {
+                                            Silent = true,
+                                            Loop = false,
+                                            Src = new Uri("ms-winsoundevent:Notification.Default")
+                                        });
+                                    if (files.ContainsKey("video")) {
+                                        toast.AddButton(
+                                            new ToastButton()
+                                            .SetContent(App.Lang.Dialog.OpenFolder)
+                                            .AddArgument("action", "browse")
+                                            .AddArgument("file", files["video"])
+                                            .SetBackgroundActivation()
+                                        );
+                                    }
+                                    if (files.ContainsKey("thumb")) {
+                                        toast.AddAppLogoOverride(new Uri(files["thumb"]));
+                                    }
                                     toast.AddButton(
                                         new ToastButton()
-                                        .SetContent(App.Lang.Dialog.OpenFolder)
-                                        .AddArgument("action", "browse")
-                                        .AddArgument("file", files["video"])
+                                        .SetContent(App.Lang.Dialog.Close)
+                                        .AddArgument("action", "none")
                                         .SetBackgroundActivation()
                                     );
+                                    toast.Show();
                                 }
-                                if (files.ContainsKey("thumb")) {
-                                    toast.AddAppLogoOverride(new Uri(files["thumb"]));
-                                }
-                                toast.AddButton(
-                                    new ToastButton()
-                                    .SetContent(App.Lang.Dialog.Close)
-                                    .AddArgument("action", "none")
-                                    .SetBackgroundActivation()
-                                );
-                                toast.Show();
-                            }
-                        } catch (Exception ex) { }
+                            } catch (Exception ex) { }
+                        } else {
+                            Data.DNStatus_Infos["Status"] = App.Lang.Status.Error;
+                        }
                     }
                     //Clear downloading status
                     Data.IsDownload = false;

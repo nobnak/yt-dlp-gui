@@ -29,22 +29,28 @@ namespace yt_dlp_gui.Wrappers {
             Url = url;
             Options["--no-playlist"] = "";
             //Options["--no-part"] = "";
-            Options["--force-overwrites"] = "";
             Options["--ignore-config"] = "";
             Options["--retries"] = "10";
             Options["--fragment-retries"] = "10";
             Options["--ffmpeg-location"] = Path_FFMPEG.QP();
             if (Type == DLPType.yd_dlp) {
                 Options["--progress-template"] = "\""
-                    + "[yt-dlp]," //0
-                    + "%(progress._percent_str)s," //1
-                    + "%(progress._eta_str)s," //2
-                    + "%(progress.downloaded_bytes)s," //3
-                    + "%(progress.total_bytes)s," //4
-                    + "%(progress.speed)s," //5
-                    + "%(progress.eta)s" //6
+                    + "download:[yt-dlp]," //0
+                    + "%(info.format_id)s," //1
+                    + "%(progress._percent_str)s," //2
+                    + "%(progress._eta_str)s," //3
+                    + "%(progress.downloaded_bytes)s," //4
+                    + "%(progress.total_bytes)s," //5
+                    + "%(progress.total_bytes_estimate)s," //6
+                    + "%(progress.speed)s," //7
+                    + "%(progress.eta)s," //8
+                    + "%(progress.fragment_index)s," //9
+                    + "%(progress.fragment_count)s" //10
                     + "\"";
                 Options["--windows-filenames"] = "";
+                Options["--js-runtimes"] = "node";
+                Options["--newline"] = "";
+                Options["--extractor-args"] = "\"youtube:player_client=web_embedded,web,tv\"";
             }
         }
         public DLP LoadConfig(string path) {

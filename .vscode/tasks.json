@@ -36,6 +36,17 @@
                 "${workspaceFolder}/yt-dlp-gui.sln"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "run",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/yt-dlp-gui/yt-dlp-gui.csproj"
+            ],
+            "problemMatcher": "$msCompile"
         }
     ]
 }
