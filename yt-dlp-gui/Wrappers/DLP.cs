@@ -271,7 +271,10 @@ namespace yt_dlp_gui.Wrappers {
         private static Regex ErrUnsupported = new Regex(@"^(?=.*?ERROR)(?=.*?Unsupported)", RegexOptions.IgnoreCase);
         public Process? Exec(Action<string>? stdall = null, Action<string>? stdout = null, Action<string>? stderr = null) {
             var fn = Path_DLP;
-            if (!File.Exists(fn)) return null;
+            if (!File.Exists(fn)) {
+                App.Log($"[EXEC ERROR] Executable not found: '{fn}'");
+                return null;
+            }
             process = new Process();
             var info = new ProcessStartInfo() {
                 FileName = fn,
@@ -284,13 +287,14 @@ namespace yt_dlp_gui.Wrappers {
                 StandardOutputEncoding = Encoding.UTF8,
                 StandardErrorEncoding = Encoding.UTF8,
             };
-            //Debug.WriteLine(Args);
+            App.Log($"[EXEC] {info.FileName} {info.Arguments}");
             Debug.WriteLine($"{info.FileName} {info.Arguments}");
             process.StartInfo = info;
             process.EnableRaisingEvents = true;
             process.OutputDataReceived += (s, e) => {
                 Debug.WriteLine(e.Data, "STD");
                 if (!string.IsNullOrWhiteSpace(e.Data)) {
+                    App.Log($"[STDOUT] {e.Data}");
                     stdall?.Invoke(e.Data);
                     stdout?.Invoke(e.Data);
                 }
@@ -298,6 +302,7 @@ namespace yt_dlp_gui.Wrappers {
             process.ErrorDataReceived += (s, e) => {
                 Debug.WriteLine(e.Data, "ERR");
                 if (!string.IsNullOrWhiteSpace(e.Data)) {
+                    App.Log($"[STDERR] {e.Data}");
                     stdall?.Invoke(e.Data);
                     stderr?.Invoke(e.Data);
                     if (ErrSign.IsMatch(e.Data)) {
@@ -311,6 +316,7 @@ namespace yt_dlp_gui.Wrappers {
             process.BeginErrorReadLine();
             process.BeginOutputReadLine();
             process.WaitForExit();
+            App.Log($"[EXIT] Code: {process.ExitCode}");
             return process;
         }
         public DLP Close() {

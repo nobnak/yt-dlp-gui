@@ -257,18 +257,18 @@ namespace yt_dlp_gui.Views {
                 var last = releaseData.FirstOrDefault();
                 if (last != null) {
                     Data.ReleaseData = releaseData;
-                    Data.LastVersion = last.tag_name;
-                    Data.LastCheckUpdate = currentDate;
+                    var lastTag = last.tag_name;
+                    if (lastTag.CompareTo(App.CurrentVersion) > 0) {
+                        Data.NewVersion = true;
+                    }
                 }
-            }
-            if (string.Compare(App.CurrentVersion, Data.LastVersion) < 0) {
-                Data.NewVersion = true;
             }
         }
         private void Button_Analyze(object sender, RoutedEventArgs e) {
             Analyze_Start();
         }
         private void Analyze_Start() {
+            App.Log($"[ANALYZE START] Url: '{Data.Url}'");
             Data.IsAnalyze = true;
             cc.SelectedIndex = -1;
             cv.SelectedIndex = -1;
@@ -291,6 +291,7 @@ namespace yt_dlp_gui.Views {
             });
         }
         private void GetInfo() {
+            App.Log($"[GETINFO START] Url: '{Data.Url}'");
             //Analyze
             var dlp = new DLP(Data.Url);
             if (Data.NeedCookie) dlp.Cookie(Data.CookieType);
@@ -375,9 +376,13 @@ namespace yt_dlp_gui.Views {
                         }
                     }
                     Data.TargetName = full; //预设挡案名称
+                    App.Log($"[GETINFO SUCCESS] Title: '{Data.Video.title}', Formats: {Data.Formats.Count}");
                 } catch (Exception ex) {
+                    App.Log($"[GETINFO PARSE ERROR] {ex}");
                     Debug.WriteLine(ex, "GetInfo Error");
                 }
+            }, err => {
+                App.Log($"[GETINFO STDERR] {err}");
             });
             dlp.Err(DLP.DLPError.Sign, () => {
                 if (Data.UseCookie == UseCookie.WhenNeeded) {

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
+using System.Text;
 using System.Windows;
 
 namespace yt_dlp_gui {
@@ -15,6 +17,13 @@ namespace yt_dlp_gui {
             AppName = entryAssembly?.GetName().Name ?? "yt-dlp-gui";
             AppPath = AppContext.BaseDirectory.TrimEnd(IoPath.DirectorySeparatorChar, IoPath.AltDirectorySeparatorChar);
             AppExe = IoPath.Combine(AppPath, AppName + ".exe");
+        }
+        public static void Log(string message) {
+            try {
+                var logPath = IoPath.Combine(AppPath ?? "", "yt-dlp-gui.log");
+                var line = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] {message}{Environment.NewLine}";
+                File.AppendAllText(logPath, line, Encoding.UTF8);
+            } catch { }
         }
         public static string Path(Folders type, params string[] pathpart) {
             //var exe = Environment.ProcessPath;

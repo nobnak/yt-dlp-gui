@@ -17,6 +17,7 @@ namespace yt_dlp_gui {
             LoadPath();
 
             var langPath = ResolveLangPath();
+            Log($"=== App Startup === Path: '{AppPath}', Exe: '{AppExe}', Lang: '{langPath}'");
             Lang = Yaml.Open<Lang>(langPath);
             new Views.Main().Show();
         }
