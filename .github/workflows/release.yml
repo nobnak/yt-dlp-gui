@@ -1,66 +1,66 @@
-name: Release (Any CPU / WPF)
+name: Build and Release
 
 on:
   push:
+    branches:
+      - '**'
     tags:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
-    env:
-      SOLUTION_ROOT: ${{ github.workspace }}
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Install .NET 9
+      - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
-      - name: Restore
-        run: dotnet restore "$env:SOLUTION_ROOT\yt-dlp-gui.sln"
+      - name: Restore dependencies
+        run: dotnet restore yt-dlp-gui.sln
 
-      - name: Publish (Release, Any CPU, framework-dependent)
+      - name: Publish application
         run: >
-          dotnet publish "$env:SOLUTION_ROOT\yt-dlp-gui\yt-dlp-gui.csproj"
+          dotnet publish yt-dlp-gui/yt-dlp-gui.csproj
           -c Release
+          -r win-x64
           --self-contained false
           -p:PublishSingleFile=true
-          -p:PublishReadyToRun=true
+          -p:EnableCompressionInSingleFile=false
+          -o publish
 
-      - name: Zip publish output
+      - name: Package artifacts
+        shell: pwsh
         run: |
-          $publishDir = Join-Path $env:SOLUTION_ROOT "yt-dlp-gui\bin\Release\net9.0-windows10.0.17763.0\win-x64\publish"
-          Compress-Archive -Path "$publishDir\*" -DestinationPath (Join-Path $env:SOLUTION_ROOT "yt-dlp-gui-anycpu.zip") -Force
+          $tag = if ($env:GITHUB_REF -like "refs/tags/*") { $env:GITHUB_REF.Substring(10) } else { "latest" }
+          $zipName = "yt-dlp-gui-$tag-win-x64.zip"
+          
+          # Copy language definitions next to executable
+          Copy-Item -Path "languages" -Destination "publish\languages" -Recurse -Force
+          
+          # Compress to zip
+          Compress-Archive -Path "publish\*" -DestinationPath $zipName -Force
+          echo "ZIP_NAME=$zipName" >> $env:GITHUB_ENV
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: yt-dlp-gui-anycpu
-          path: yt-dlp-gui-anycpu.zip
+          name: build-artifact
+          path: ${{ env.ZIP_NAME }}
 
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: yt-dlp-gui-anycpu
-
-      - name: Rename zip with version
-        run: mv yt-dlp-gui-anycpu.zip "yt-dlp-gui-${{ github.ref_name }}-anycpu.zip"
-
-      - name: Create GitHub Release
+      - name: Create Release
         uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v')
         with:
-          files: "yt-dlp-gui-${{ github.ref_name }}-anycpu.zip"
+          token: ${{ github.token }}
+          files: ${{ env.ZIP_NAME }}
           generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
