@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -29,8 +29,7 @@ namespace yt_dlp_gui.Controls.Behaviors {
             return v;
         }
         private static void onNumberChanged(DependencyObject dpo, DependencyPropertyChangedEventArgs e) {
-            var t = (dpo as TextBoxNumber);
-            t.NumberToText();
+            (dpo as TextBoxNumber)?.NumberToText();
         }
         private void NumberToText() {
             if (Number == 0 && !AssociatedObject.IsFocused) {
@@ -134,7 +133,7 @@ namespace yt_dlp_gui.Controls.Behaviors {
         private void TextBoxNumber_Pasting(object sender, DataObjectPastingEventArgs e) {
             if (e.DataObject.GetDataPresent(typeof(string))) {
                 var text = e.DataObject.GetData(typeof(string)) as string;
-                if (!IsVaild(text)) e.CancelCommand();
+                if (string.IsNullOrEmpty(text) || !IsVaild(text)) e.CancelCommand();
             }
         }
         //驗證數字 - 輸入

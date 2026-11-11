@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -66,7 +66,7 @@ namespace Libs {
                     Directory.GetDirectories(directory).Length == 0) {
                     try {
                         Directory.Delete(directory, false);
-                    } catch (Exception e) {
+                    } catch {
                         return false;
                     }
                 }

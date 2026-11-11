@@ -61,8 +61,9 @@ namespace yt_dlp_gui.Controls {
             return m;
         }
         private void MenuItem_Click(object sender, RoutedEventArgs e) {
-            var item = (sender as FrameworkElement).DataContext as MenuDataItem;
-            item?.Action?.Invoke();
+            if (sender is FrameworkElement fe && fe.DataContext is MenuDataItem item) {
+                item.Action?.Invoke();
+            }
         }
     }
     public enum MenuType {
@@ -84,7 +85,7 @@ namespace yt_dlp_gui.Controls {
     public class MenuDataItem {
         public IconKind Icon { get; set; } = IconKind.None;
         public Brush IconColor { get; set; } = Brushes.White;
-        public object Header { get; set; }
+        public object? Header { get; set; }
         public DataTemplate? HeaderTemplate { get; set; } = null;
         public Brush HeaderColor { get; set; } = Brushes.White;
         public Action? Action { get; set; }

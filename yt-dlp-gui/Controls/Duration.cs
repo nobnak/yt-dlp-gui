@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -9,7 +9,8 @@ namespace yt_dlp_gui.Controls {
             = DependencyProperty.RegisterAttached("Secs", typeof(double?), typeof(Duration),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, SecsChanged));
         private static void SecsChanged(DependencyObject dpo, DependencyPropertyChangedEventArgs e) {
-            var (d, v) = (dpo as TextBlock, GetSecs(dpo));
+            if (dpo is not TextBlock d) return;
+            var v = GetSecs(dpo);
             if (v.HasValue) {
                 TimeSpan ts = TimeSpan.FromSeconds(v.Value);
                 if (ts.Days > 0) {

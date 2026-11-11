@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace yt_dlp_gui.Controls {
@@ -19,9 +19,9 @@ namespace yt_dlp_gui.Controls {
         }
 
         static void OnHtmlChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
-            WebBrowser wb = d as WebBrowser;
-            if (wb != null)
-                wb.NavigateToString(e.NewValue as string);
+            if (d is WebBrowser wb && e.NewValue is string html) {
+                wb.NavigateToString(html);
+            }
         }
     }
 }

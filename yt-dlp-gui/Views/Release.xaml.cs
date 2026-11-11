@@ -1,4 +1,4 @@
-﻿using Libs;
+using Libs;
 using System;
 using System.ComponentModel;
 using System.Linq;
@@ -19,15 +19,17 @@ namespace yt_dlp_gui.Views {
         }
         public async void Inits() {
             var releaseData = await Web.GetLastTag();
-            if (releaseData.Any()) {
+            if (releaseData != null && releaseData.Any()) {
                 Data.Markdown = String.Empty;
                 foreach (var release in releaseData) {
                     if (string.Compare(App.CurrentVersion, release.tag_name) < 0) {
                         Data.Markdown += $"# {release.tag_name}\n";
                         Data.Markdown += $"{release.body}\n";
                         Data.Markdown += $"# Assets\n";
-                        foreach (var asset in release.assets) {
-                            Data.Markdown += $"* [{asset.name}]({asset.browser_download_url})\n";
+                        if (release.assets != null) {
+                            foreach (var asset in release.assets) {
+                                Data.Markdown += $"* [{asset.name}]({asset.browser_download_url})\n";
+                            }
                         }
                         Data.Markdown += $"---\n";
                     }

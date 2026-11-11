@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -17,7 +17,8 @@ namespace yt_dlp_gui.Controls {
             = DependencyProperty.RegisterAttached("Unit", typeof(FilesizeUnit), typeof(Filesize),
                 new FrameworkPropertyMetadata(FilesizeUnit.Auto, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, BytesPropertyChanged));
         private static void BytesPropertyChanged(DependencyObject dpo, DependencyPropertyChangedEventArgs e) {
-            var (d, v) = (dpo as TextBlock, GetBytes(dpo));
+            if (dpo is not TextBlock d) return;
+            var v = GetBytes(dpo);
             var value = v.HasValue ? v.Value : 0;
             
             //負數處理

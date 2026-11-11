@@ -34,7 +34,8 @@ namespace yt_dlp_gui.Models {
     public class ComparerAudio : IComparer<Format> {
         public int Compare(Format? x, Format? y) {
             if (x == null && y == null) return 0;
-            var r = 0;
+            if (x == null) return 1;
+            if (y == null) return -1;
             //比较 ABR
             if (x.abr.HasValue && y.abr.HasValue) {
                 var max = Math.Max(x.abr.Value, y.abr.Value);
@@ -58,7 +59,8 @@ namespace yt_dlp_gui.Models {
     public class ComparerVideo : IComparer<Format> {
         public int Compare(Format? x, Format? y) {
             if (x == null && y == null) return 0;
-            var r = 0;
+            if (x == null) return 1;
+            if (y == null) return -1;
             //比较 resolution
             if (x.height.HasValue && y.height.HasValue) {
                 var xr = (x.width ?? 1) * x.height.Value;
@@ -80,8 +82,8 @@ namespace yt_dlp_gui.Models {
             }
             //比较 格式
             var prefer = new List<string>() { "VP9", "AV1", "H.264" };
-            var xf = prefer.IndexOf(x.vcodec);
-            var yf = prefer.IndexOf(y.vcodec);
+            var xf = x.vcodec != null ? prefer.IndexOf(x.vcodec) : -1;
+            var yf = y.vcodec != null ? prefer.IndexOf(y.vcodec) : -1;
             if (xf != yf) return xf > yf ? -1 : 1;
 
             return 0;

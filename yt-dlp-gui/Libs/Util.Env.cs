@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -45,7 +45,7 @@ namespace Libs {
             if (0 != (int)SHGetFileInfo(path, FILE_ATTRIBUTE_NORMAL, out shfi, (uint)Marshal.SizeOf(typeof(SHFILEINFO)), SHGFI_DISPLAYNAME)) {
                 return shfi.szDisplayName;
             }
-            return null;
+            return path;
         }
     }
 }

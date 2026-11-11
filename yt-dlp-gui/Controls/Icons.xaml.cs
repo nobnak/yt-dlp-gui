@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
@@ -17,7 +17,7 @@ namespace yt_dlp_gui.Controls {
         public static readonly DependencyProperty KindProperty = DependencyProperty.RegisterAttached(
             "Kind", typeof(IconKind), typeof(Icons), new FrameworkPropertyMetadata(IconKind.None, OnKindChanged));
         private static void OnKindChanged(DependencyObject dpo, DependencyPropertyChangedEventArgs e) {
-            var d = dpo as Icons;
+            if (dpo is not Icons d) return;
             d.data.Kind = d.Kind;
         }
         public IconKind Kind {
@@ -28,7 +28,7 @@ namespace yt_dlp_gui.Controls {
         public static readonly DependencyProperty SpinProperty = DependencyProperty.RegisterAttached(
             "Spin", typeof(bool), typeof(Icons), new FrameworkPropertyMetadata(false, OnSpinChanged));
         private static void OnSpinChanged(DependencyObject dpo, DependencyPropertyChangedEventArgs e) {
-            var d = dpo as Icons;
+            if (dpo is not Icons d) return;
             d.data.Spin = (bool)e.NewValue;
         }
         public bool Spin {
@@ -39,7 +39,7 @@ namespace yt_dlp_gui.Controls {
         public static readonly DependencyProperty SizeProperty = DependencyProperty.RegisterAttached(
             "Size", typeof(double), typeof(Icons), new FrameworkPropertyMetadata(24d, OnSizeChanged));
         private static void OnSizeChanged(DependencyObject dpo, DependencyPropertyChangedEventArgs e) {
-            var d = dpo as Icons;
+            if (dpo is not Icons d) return;
             d.Width = d.Height = (double)e.NewValue;
         }
         public double Size {
@@ -50,7 +50,7 @@ namespace yt_dlp_gui.Controls {
         public static readonly DependencyProperty IsLoadingProperty = DependencyProperty.RegisterAttached(
             "IsLoading", typeof(bool), typeof(Icons), new FrameworkPropertyMetadata(false, OnIsLoadingChanged));
         private static void OnIsLoadingChanged(DependencyObject dpo, DependencyPropertyChangedEventArgs e) {
-            var d = dpo as Icons;
+            if (dpo is not Icons d) return;
             var isloading = (bool)e.NewValue;
             d.data.Spin = isloading ? true : d.Spin;
             d.data.Kind = isloading ? IconKind.Loading : d.Kind;
@@ -72,15 +72,18 @@ namespace yt_dlp_gui.Controls {
         }
     }
     public class IconsKindConverter : IValueConverter {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
-            var type = value.GetType();
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) {
             if (value != null) {
-                return GetDescription(type, value);
+                return GetDescription(value.GetType(), value);
             }
             return Geometry.Empty;
         }
         private Geometry GetDescription(Type enumType, object enumValue) {
-            var descriptionAttribute = enumType.GetField(enumValue.ToString())
+            var name = enumValue.ToString();
+            if (name == null) return Geometry.Empty;
+            var field = enumType.GetField(name);
+            if (field == null) return Geometry.Empty;
+            var descriptionAttribute = field
                 .GetCustomAttributes(typeof(DescriptionAttribute), false)
                 .FirstOrDefault() as DescriptionAttribute;
 

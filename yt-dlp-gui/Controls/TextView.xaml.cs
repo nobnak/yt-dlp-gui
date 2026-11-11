@@ -1,4 +1,4 @@
-﻿using ICSharpCode.AvalonEdit.Document;
+using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using Libs;
@@ -44,9 +44,10 @@ namespace yt_dlp_gui.Controls {
             //d?.LoadDefinition(n);
         }
         private static void onLinkChanged(DependencyObject dpo, DependencyPropertyChangedEventArgs e) {
-            var d = (dpo as TextView);
-            d.textView.Options.EnableHyperlinks = d.EnableHyperlinks;
-            d.textView.Options.RequireControlModifierForHyperlinkClick = !d.EnableHyperlinks;
+            if (dpo is TextView d && d.textView?.Options != null) {
+                d.textView.Options.EnableHyperlinks = d.EnableHyperlinks;
+                d.textView.Options.RequireControlModifierForHyperlinkClick = !d.EnableHyperlinks;
+            }
         }
         public string Text {
             get => (string)GetValue(TextProperty);

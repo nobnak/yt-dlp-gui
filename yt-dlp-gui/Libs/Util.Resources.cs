@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -26,9 +26,10 @@ namespace Libs {
 
             try {
                 var resourceSet = resourceManager.GetResourceSet(culture, true, true);
-
-                foreach (System.Collections.DictionaryEntry resource in resourceSet) {
-                    yield return resource.Key;
+                if (resourceSet != null) {
+                    foreach (System.Collections.DictionaryEntry resource in resourceSet) {
+                        yield return resource.Key;
+                    }
                 }
             } finally {
                 resourceManager.ReleaseAllResources();

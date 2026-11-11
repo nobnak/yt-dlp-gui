@@ -78,7 +78,7 @@ namespace Libs {
             //var fileExt = Path.GetExtension(fileName);
             //var filePath = Path.ChangeExtension(savePath, fileExt);
 
-            var response = httpClient.GetAsync(downloadUrl).Result;
+            var response = await httpClient.GetAsync(downloadUrl);
             if (response.IsSuccessStatusCode) {
                 var contentLength = response.Content.Headers.ContentLength;
                 if (contentLength == null) {
@@ -87,12 +87,12 @@ namespace Libs {
 
                 var totalBytes = contentLength.Value;
                 var downloadedBytes = 0L;
-                using (var contentStream = response.Content.ReadAsStreamAsync().Result) {
+                using (var contentStream = await response.Content.ReadAsStreamAsync()) {
                     using (var fileStream = new FileStream(savePath, FileMode.Create, FileAccess.Write)) {
                         var buffer = new byte[8192];
                         int bytesRead;
-                        while ((bytesRead = contentStream.ReadAsync(buffer, 0, buffer.Length).Result) > 0) {
-                            fileStream.WriteAsync(buffer, 0, bytesRead).Wait();
+                        while ((bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length)) > 0) {
+                            await fileStream.WriteAsync(buffer, 0, bytesRead);
                             downloadedBytes += bytesRead;
 
                             if (progress != null) {

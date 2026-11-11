@@ -28,15 +28,16 @@ namespace Libs.Yaml {
         }
         public static T OpenFromResouce<T>(string path) where T : new() {
             if (!Util.ResourceExists(path)) return new T();
-            using (Stream s = System.Windows.Application.GetResourceStream(new Uri(path, UriKind.Relative)).Stream) {
+            var streamInfo = System.Windows.Application.GetResourceStream(new Uri(path, UriKind.Relative));
+            if (streamInfo == null) return new T();
+            using (Stream s = streamInfo.Stream) {
                 using (TextReader reader = new StreamReader(s)) {
                     var deserializer = new DeserializerBuilder()
                             .IgnoreUnmatchedProperties()
                             .Build();
-                    return deserializer.Deserialize<T>(reader);
+                    return deserializer.Deserialize<T>(reader) ?? new T();
                 }
             }
-            return new T();
         }
         public static string Serialize(object obj) {
             var s = new SerializerBuilder()
@@ -62,8 +63,8 @@ namespace Libs.Yaml {
             } catch { };
         }
         public static void Load(this IYamlConfig obj, string path) {
-            MethodInfo mi = typeof(Yaml).GetMethod(nameof(Yaml.Open)); //方法
-            if (mi.IsGenericMethod) {
+            MethodInfo? mi = typeof(Yaml).GetMethod(nameof(Yaml.Open)); //方法
+            if (mi != null && mi.IsGenericMethod) {
                 //泛型呼叫
                 var func = mi.MakeGenericMethod(new[] { obj.GetType() });
                 var data = func.Invoke(null, new[] { path }) as IYamlConfig; //参数

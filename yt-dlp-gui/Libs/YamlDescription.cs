@@ -57,7 +57,7 @@ namespace Libs.Yaml {
                 baseDescriptor.Write(target, value);
             }
 
-            public T GetCustomAttribute<T>() where T : Attribute {
+            public T? GetCustomAttribute<T>() where T : Attribute {
                 return baseDescriptor.GetCustomAttribute<T>();
             }
 
@@ -81,7 +81,7 @@ namespace Libs.Yaml {
 
         public string Comment { get; private set; }
 
-        public object Value { get { return innerDescriptor.Value; } }
+        public object? Value { get { return innerDescriptor.Value; } }
         public Type Type { get { return innerDescriptor.Type; } }
         public Type StaticType { get { return innerDescriptor.StaticType; } }
         public ScalarStyle ScalarStyle { get { return innerDescriptor.ScalarStyle; } }

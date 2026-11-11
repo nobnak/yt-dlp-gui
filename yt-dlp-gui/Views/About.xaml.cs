@@ -1,4 +1,4 @@
-﻿using ICSharpCode.AvalonEdit.Rendering;
+using ICSharpCode.AvalonEdit.Rendering;
 using Libs;
 using Newtonsoft.Json;
 using Swordfish.NET.Collections;
@@ -30,11 +30,11 @@ namespace yt_dlp_gui.Views {
         }
 
         private void Hyperlink_Click(object sender, RoutedEventArgs e) {
-            Hyperlink link = sender as Hyperlink;
-            // 激活的是当前默认的浏览器
-            var url = link.NavigateUri.AbsoluteUri;
-            Debug.WriteLine(url);
-            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            if (sender is Hyperlink link && link.NavigateUri != null) {
+                var url = link.NavigateUri.AbsoluteUri;
+                Debug.WriteLine(url);
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            }
         }
 
         private void Button_Click(object sender, RoutedEventArgs e) {
