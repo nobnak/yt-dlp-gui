@@ -247,6 +247,8 @@ namespace yt_dlp_gui.Wrappers {
             }
             if (Type == DLPType.yd_dlp) {
                 Options["--no-simulate"] = "";
+                Options["--no-quiet"] = "";
+                Options["--progress"] = "";
                 Options["--print"] = "after_move:[filepath]%(filepath)s".QS();
             }
             Options["--output"] = Path.ChangeExtension(targetpath, ".%(ext)s").QP();
