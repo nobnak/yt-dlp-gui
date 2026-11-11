@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace yt_dlp_gui.Models {
@@ -14,6 +14,8 @@ namespace yt_dlp_gui.Models {
         public decimal duration { get; set; } = 0;
         public string duration_string { get; set; } = string.Empty;
         public List<Format> requested_formats { get; set; } = new();
+        public string format_id { get; set; } = string.Empty;
+        public string ext { get; set; } = string.Empty;
         public string _filename { get; set; } = string.Empty;
         public bool is_live { get; set; } = false;
         public List<Chapters>? chapters { get; set; } = null;

@@ -35,6 +35,7 @@ namespace yt_dlp_gui.Wrappers {
             Options["--fragment-retries"] = "10";
             Options["--ffmpeg-location"] = Path_FFMPEG.QP();
             if (Type == DLPType.yd_dlp) {
+                Options["--encoding"] = "utf-8";
                 Options["--progress-template"] = "\""
                     + "download:[yt-dlp]," //0
                     + "%(info.format_id)s," //1
@@ -97,7 +98,8 @@ namespace yt_dlp_gui.Wrappers {
             }
             return this;
         }
-        public DLP SplitChapters(Chapters chapters, string path = "") {
+        public DLP SplitChapters(Chapters? chapters, string path = "") {
+            if (chapters == null) return this;
             switch (chapters.type) {
                 case ChaptersType.Split:
                     Options["--split-chapters"] = "";
@@ -148,6 +150,20 @@ namespace yt_dlp_gui.Wrappers {
         
         public DLP GetInfo() {
             Options["--dump-json"] = "";
+            return this;
+        }
+        public DLP LoadInfoJson(string path) {
+            Options["--load-info-json"] = path.QP();
+            return this;
+        }
+        public DLP Format(string format_id) {
+            if (!string.IsNullOrWhiteSpace(format_id)) {
+                Options["--format"] = format_id;
+            }
+            return this;
+        }
+        public DLP Print(string template) {
+            Options["--print"] = template.QS();
             return this;
         }
         public DLP UseAria2(bool enable = true) {
@@ -217,7 +233,9 @@ namespace yt_dlp_gui.Wrappers {
                         return $"{key} {x.Value}";
                     }
                 }).ToList();
-                args.Add(Url.QS());
+                if (!string.IsNullOrWhiteSpace(Url)) {
+                    args.Add(Url.QS());
+                }
                 return string.Join(" ", args);
             }
         }
@@ -226,6 +244,10 @@ namespace yt_dlp_gui.Wrappers {
             Options["--format"] = format_id;
             if (targetpath.getExt() != originext) {
                 Options["--remux-video"] = targetpath.getExt();
+            }
+            if (Type == DLPType.yd_dlp) {
+                Options["--no-simulate"] = "";
+                Options["--print"] = "after_move:[filepath]%(filepath)s".QS();
             }
             Options["--output"] = Path.ChangeExtension(targetpath, ".%(ext)s").QP();
             Files.Add(targetpath);

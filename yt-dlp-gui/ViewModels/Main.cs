@@ -1,6 +1,7 @@
 using Libs;
 using Libs.Yaml;
 using Swordfish.NET.Collections;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -8,10 +9,13 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using YamlDotNet.Serialization;
 using yt_dlp_gui.Models;
+using yt_dlp_gui.Wrappers;
 
 namespace yt_dlp_gui.Views {
     public partial class Main :Window {
@@ -88,7 +92,7 @@ namespace yt_dlp_gui.Views {
                             } else {
                                 IsPackage = false;
                                 if (selectedAudio.type == FormatType.package) {
-                                    selectedAudio = FormatsAudio.FirstOrDefault(x => x.type != FormatType.package);
+                                    selectedAudio = FormatsAudio.FirstOrDefault(x => x.type != FormatType.package) ?? new();
                                 }
                             }
                         }
@@ -118,37 +122,80 @@ namespace yt_dlp_gui.Views {
             }
             public void SelectFormatBest() {
                 selectedChapter = Chapters.FirstOrDefault();
-                var defVideoFmt = FormatsVideo.FirstOrDefault();
-                var defAudioFmt = FormatsAudio.FirstOrDefault();
-                if (UseFormat) {
-                    selectedVideo = defVideoFmt;
-                    selectedAudio = defAudioFmt;
-                } else {
-                    selectedVideo = FormatsVideo.FirstOrDefault(x => RequestedFormats.Any(r => r.format_id == x.format_id), defVideoFmt);
-                    selectedAudio = FormatsAudio.FirstOrDefault(x => RequestedFormats.Any(r => r.format_id == x.format_id), defAudioFmt);
-                }
-                selectedSub = Subtitles.FirstOrDefault();
+                var defVideoFmt = FormatsVideo.FirstOrDefault() ?? new();
+                var defAudioFmt = FormatsAudio.FirstOrDefault() ?? new();
+                selectedVideo = FormatsVideo.FirstOrDefault(x => RequestedFormats.Any(r => r != null && x != null && r.format_id == x.format_id)) ?? defVideoFmt;
+                selectedAudio = FormatsAudio.FirstOrDefault(x => RequestedFormats.Any(r => r != null && x != null && r.format_id == x.format_id)) ?? defAudioFmt;
+                selectedSub = Subtitles.FirstOrDefault() ?? new();
             }
+            private int _checkExtSeq = 0;
             public void CheckExtension() {
                 if (RemuxVideo) return;
-                if (!string.IsNullOrWhiteSpace(TargetName)) {
-                    if (selectedVideo != null && selectedAudio != null) {
-                        /*
-                        if (selectedVideo.type == FormatType.package) {
-                            TargetName = Path.ChangeExtension(TargetName, selectedVideo.video_ext);
-                        } else if (selectedVideo.video_ext == "webm" && selectedAudio.audio_ext == "webm") {
-                            TargetName = Path.ChangeExtension(TargetName, "webm");
-                        } else if (selectedVideo.video_ext == "mp4" && selectedAudio.audio_ext == "m4a") {
-                            TargetName = Path.ChangeExtension(TargetName, "mp4");
-                        } else {
-                            TargetName = Path.ChangeExtension(TargetName, "mkv");
-                        }*/
-                        TargetName = Path.ChangeExtension(TargetName, OriginExt);
+                if (string.IsNullOrWhiteSpace(TargetName)) return;
+                if (selectedVideo == null || selectedAudio == null) return;
+                if (string.IsNullOrWhiteSpace(selectedVideo.format_id) || string.IsNullOrWhiteSpace(selectedAudio.format_id)) return;
+
+                if (DLP.Type == DLP.DLPType.yd_dlp && !string.IsNullOrWhiteSpace(InfoJsonPath) && File.Exists(InfoJsonPath)) {
+                    var vid = selectedVideo.type == FormatType.package
+                        ? selectedVideo.format_id
+                        : $"{selectedVideo.format_id}+{selectedAudio.format_id}";
+                    if (_extCache.TryGetValue(vid, out var cachedExt)) {
+                        ResolvedExt = cachedExt;
+                        TargetName = Path.ChangeExtension(TargetName, cachedExt);
+                        return;
                     }
+                    var seq = Interlocked.Increment(ref _checkExtSeq);
+                    var jsonPath = InfoJsonPath;
+                    var configPath = selectedConfig?.file ?? string.Empty;
+                    Task.Run(() => {
+                        var ext = string.Empty;
+                        var dlp = new DLP()
+                            .LoadConfig(configPath)
+                            .LoadInfoJson(jsonPath)
+                            .Format(vid)
+                            .Print("%(ext)s");
+                        dlp.Exec(null, std => {
+                            var trimmed = std.Trim().Trim('.');
+                            if (!string.IsNullOrWhiteSpace(trimmed)) {
+                                ext = trimmed.ToLowerInvariant();
+                            }
+                        });
+                        if (!string.IsNullOrWhiteSpace(ext)) {
+                            _extCache[vid] = ext;
+                            if (seq == Volatile.Read(ref _checkExtSeq) && !RemuxVideo && !string.IsNullOrWhiteSpace(TargetName)) {
+                                ResolvedExt = ext;
+                                TargetName = Path.ChangeExtension(TargetName, ext);
+                            }
+                        }
+                    });
+                    return;
                 }
+
+                TargetName = Path.ChangeExtension(TargetName, OriginExt);
+            }
+            private readonly Dictionary<string, string> _extCache = new();
+            public string InfoJsonPath { get; set; } = string.Empty;
+            public string ResolvedExt { get; set; } = string.Empty;
+            public void SetInfoJson(string json, string? initialFormatId, string? initialExt) {
+                _extCache.Clear();
+                ResolvedExt = string.Empty;
+                if (!string.IsNullOrWhiteSpace(initialFormatId) && !string.IsNullOrWhiteSpace(initialExt)) {
+                    var normExt = initialExt.Trim().Trim('.').ToLowerInvariant();
+                    _extCache[initialFormatId] = normExt;
+                    ResolvedExt = normExt;
+                }
+                try {
+                    if (string.IsNullOrWhiteSpace(InfoJsonPath)) {
+                        InfoJsonPath = Path.Combine(Path.GetTempPath(), $"yt-dlp-gui-{Environment.ProcessId}.info.json");
+                    }
+                    File.WriteAllText(InfoJsonPath, json, new System.Text.UTF8Encoding(false));
+                } catch { }
             }
             public string OriginExt {
                 get {
+                    if (!string.IsNullOrWhiteSpace(ResolvedExt)) {
+                        return ResolvedExt;
+                    }
                     if (selectedVideo != null && selectedAudio != null) {
                         if (selectedVideo.type == FormatType.package) {
                             return selectedVideo.video_ext.ToLower().Trim('.');
@@ -306,7 +353,7 @@ namespace yt_dlp_gui.Views {
                     Enable.UseNotifications = false;
                     Enable.UseAria2 = false;
                 }
-                if (Video.chapters == null) Enable.SelectChapters = false;
+                if (Video?.chapters == null) Enable.SelectChapters = false;
                 if (!FormatsVideo.Any()) {
                     Enable.FormatVideo = false;
                     Enable.SaveVideo = false;
@@ -338,7 +385,7 @@ namespace yt_dlp_gui.Views {
                         Enable.SaveSubtitle = false;
                     }
                 }
-                if (Video.is_live == true) {
+                if (Video?.is_live == true) {
                     //ExecText = IsDownload ? "Stop" : "Record";
                     ExecText = IsDownload ? App.Lang.Main.Stop : App.Lang.Main.Record;
                 } else {
@@ -440,7 +487,17 @@ namespace yt_dlp_gui.Views {
                 Data = data;
                 s = Data.DNStatus_Video;
             }
-            public void GetStatus(string std) {
+            public void GetStatus(string std, DLP? dlp = null) {
+                if (std.StartsWith("[filepath]")) {
+                    var fp = std.Substring("[filepath]".Length).Trim().Trim('"');
+                    if (!string.IsNullOrWhiteSpace(fp)) {
+                        dlp?.Files.Add(fp);
+                        Data.RemuxVideo = true;
+                        Data.TargetFile = fp;
+                        Data.RemuxVideo = false;
+                    }
+                    return;
+                }
                 if (regPart.IsMatch(std)) {
                     var r = Util.GetGroup(regPart, std);
                     if (r.GetValueOrDefault("fid", "0") == Data.selectedVideo.format_id) {

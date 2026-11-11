@@ -254,11 +254,11 @@ namespace yt_dlp_gui.Views {
 
             if (needcheck) {
                 var releaseData = await Web.GetLastTag();
-                var last = releaseData.FirstOrDefault();
-                if (last != null) {
+                var last = releaseData?.FirstOrDefault();
+                if (last != null && releaseData != null) {
                     Data.ReleaseData = releaseData;
                     var lastTag = last.tag_name;
-                    if (lastTag.CompareTo(App.CurrentVersion) > 0) {
+                    if (lastTag != null && lastTag.CompareTo(App.CurrentVersion) > 0) {
                         Data.NewVersion = true;
                     }
                 }
@@ -366,6 +366,7 @@ namespace yt_dlp_gui.Views {
                         Data.Thumbnail = Data.Video.thumbnail;
                     }
 
+                    Data.SetInfoJson(std, Data.Video.format_id, Data.Video.ext);
                     Data.SelectFormatBest(); //Make ComboBox Selected Item
                     var full = string.Empty;
                     if (!string.IsNullOrWhiteSpace(Data.Video._filename)) {
@@ -442,8 +443,8 @@ namespace yt_dlp_gui.Views {
                 Download_Start_Native(DownloadType.Audio, target);
             }
         }
-        private void Button_ExplorerTarget(object sender, RoutedEventArgs e) {
-            Util.Explorer(Data.TargetFile);
+        private async void Button_ExplorerTarget(object sender, RoutedEventArgs e) {
+            await Util.Explorer(Data.TargetFile);
         }
         private void Button_Cancel(object sender, RoutedEventArgs e) {
             if (Data.IsDownload) {
@@ -458,7 +459,7 @@ namespace yt_dlp_gui.Views {
             Download_Start_Native();
         }
         public enum DownloadType { Normal, Video, Audio, Thumbnail, Subtitle }
-        private async void Download_Start_Native(DownloadType type = DownloadType.Normal, string target = "") {
+        private void Download_Start_Native(DownloadType type = DownloadType.Normal, string target = "") {
             Data.CanCancel = false;
             Data.IsAbouted = false;
             if (Data.IsDownload) {
@@ -489,7 +490,7 @@ namespace yt_dlp_gui.Views {
                     tasks.Add(Task.Run(() => {
                         //var dlp = new DLP(Data.Url);
                         RunningDLP.Add(dlp);
-                        dlp.IsLive = Data.Video.is_live;
+                        dlp.IsLive = Data.Video?.is_live ?? false;
                         var vid = type switch {
                             DownloadType.Video => Data.selectedVideo.format_id,
                             DownloadType.Audio => Data.selectedAudio.format_id,
@@ -539,7 +540,7 @@ namespace yt_dlp_gui.Views {
                         };
                         const int maxRetries = 3;
                         for (int retry = 0; retry < maxRetries; retry++) {
-                            lastProcess = dlp.Exec(std => repoter.GetStatus(std));
+                            lastProcess = dlp.Exec(std => repoter.GetStatus(std, dlp));
                             if (lastProcess == null || lastProcess.ExitCode == 0 || Data.IsAbouted) break;
                             if (retry < maxRetries - 1) Thread.Sleep(3000);
                         }
@@ -558,7 +559,7 @@ namespace yt_dlp_gui.Views {
                                 if (File.Exists(donepath)) {
                                     if (donepath.isVideo()) files["video"] = donepath;
                                     if (donepath.isImage()) files["thumb"] = donepath;
-                                    if (Data.ModifiedType == ModifiedType.Upload) {
+                                    if (Data.ModifiedType == ModifiedType.Upload && Data.Video != null) {
                                         if (DateTimeOffset.TryParseExact(Data.Video.upload_date, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTimeOffset tryDate)) {
                                             File.SetLastWriteTimeUtc(donepath, tryDate.DateTime);
                                         }
@@ -571,7 +572,7 @@ namespace yt_dlp_gui.Views {
                                 if (Data.UseNotifications) {
                                     Util.NotifySound(Data.PathNotify);
                                     var toast = new ToastContentBuilder()
-                                        .AddText(Data.Video.title)
+                                        .AddText(Data.Video?.title ?? "")
                                         .AddText(App.Lang.Dialog.DownloadCompleted)
                                         .AddAudio(new ToastAudio() {
                                             Silent = true,
@@ -598,7 +599,7 @@ namespace yt_dlp_gui.Views {
                                     );
                                     toast.Show();
                                 }
-                            } catch (Exception ex) { }
+                            } catch { }
                         } else {
                             Data.DNStatus_Infos["Status"] = App.Lang.Status.Error;
                         }
@@ -622,7 +623,7 @@ namespace yt_dlp_gui.Views {
                 dialog.FileName = Path.GetFileName(Data.TargetFile);
                 if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
                     Data.RemuxVideo = true;
-                    Data.TargetPath = Path.GetDirectoryName(dialog.FileName);
+                    Data.TargetPath = Path.GetDirectoryName(dialog.FileName) ?? string.Empty;
                     Data.TargetName = Path.GetFileName(dialog.FileName);
                     Data.RemuxVideo = false;
                     /*
@@ -641,7 +642,7 @@ namespace yt_dlp_gui.Views {
             var regexSearch = new string(Path.GetInvalidFileNameChars());
             return Regex.Replace(filename, string.Format("[{0}]", Regex.Escape(regexSearch)), "_");
         }
-        private async void CommandBinding_SaveAs_Executed(object sender, System.Windows.Input.ExecutedRoutedEventArgs e) {
+        private void CommandBinding_SaveAs_Executed(object sender, System.Windows.Input.ExecutedRoutedEventArgs e) {
             var dialog = new SaveFileDialog();
             dialog.InitialDirectory = Path.GetDirectoryName(Data.TargetFile);
             var OrigExt = Path.GetExtension(Data.Thumbnail);
@@ -654,6 +655,7 @@ namespace yt_dlp_gui.Views {
             }
         }
         private void DownloadThumbnail(string toFile) {
+            if (string.IsNullOrWhiteSpace(Data.Thumbnail)) return;
             var origExt = Path.GetExtension(Data.Thumbnail);
             var origin = Path.ChangeExtension(Data.TargetFile, origExt);
             //var target = Path.ChangeExtension(Data.TargetFile, ".jpg");
@@ -717,19 +719,22 @@ namespace yt_dlp_gui.Views {
             Data.Top = Top;
             Data.Width = Width;
             Data.Height = Height;
+            if (!string.IsNullOrWhiteSpace(Data.InfoJsonPath) && File.Exists(Data.InfoJsonPath)) {
+                try { File.Delete(Data.InfoJsonPath); } catch { }
+            }
         }
         private void ComboBox_TextChanged(object sender, TextChangedEventArgs e) {
-            var combo = sender as System.Windows.Controls.ComboBox;
-            if (combo.SelectedIndex == -1) {
-                Data.PathTEMP = combo.Text;
-            } else {
-                Data.PathTEMP = combo.SelectedValue.ToString();
+            if (sender is System.Windows.Controls.ComboBox combo) {
+                if (combo.SelectedIndex == -1) {
+                    Data.PathTEMP = combo.Text;
+                } else {
+                    Data.PathTEMP = combo.SelectedValue?.ToString() ?? "";
+                }
             }
         }
 
         private void ToggleButton_Checked(object sender, RoutedEventArgs e) {
-            var b = sender as ToggleButton;
-            if (b.IsChecked == true) {
+            if (sender is ToggleButton b && b.IsChecked == true) {
                 var menu = new List<MenuDataItem>() {
                     (App.Lang.Main.TemporaryTarget, () => { Data.PathTEMP = "%YTDLPGUI_TARGET%"; }),
                     (App.Lang.Main.TemporaryLocale, () => { Data.PathTEMP = "%YTDLPGUI_LOCALE%"; }),
@@ -748,8 +753,7 @@ namespace yt_dlp_gui.Views {
         }
 
         private void ToggleButton_Checked_Sound(object sender, RoutedEventArgs e) {
-            var b = sender as ToggleButton;
-            if (b.IsChecked == true) {
+            if (sender is ToggleButton b && b.IsChecked == true) {
                 var menu = new List<MenuDataItem>() {
                     (App.Lang.Main.SoundSystem, () => { Data.PathNotify = ""; }),
                     ("-"),
@@ -757,7 +761,7 @@ namespace yt_dlp_gui.Views {
                         var dialog = new OpenFileDialog();
                         var dirname = Path.GetDirectoryName(Data.PathNotify);
                         Debug.WriteLine(dirname);
-                        if (Directory.Exists(dirname)) {
+                        if (!string.IsNullOrEmpty(dirname) && Directory.Exists(dirname)) {
                             dialog.InitialDirectory = dirname;
                             if (File.Exists(Data.PathNotify)) {
                                 dialog.FileName = Path.GetFileName(Data.PathNotify);
