@@ -277,6 +277,7 @@ namespace yt_dlp_gui.Views {
             public bool EmbedChapters { get; set; } = false;
             public bool EmbedSubtitles { get; set; } = false;
             public ModifiedType ModifiedType { get; set; } = ModifiedType.Modified;
+            public PlayerClientType PlayerClient { get; set; } = PlayerClientType.WebEmbedded_Web_Tv;
             public string TimeRange { get; set; } = string.Empty;
             public string LimitRate { get; set; } = string.Empty;
             public Enable Enable { get; set; } = new();
@@ -453,6 +454,7 @@ namespace yt_dlp_gui.Views {
             [YamlMember(Order = 1305)] public bool EmbedSubtitles { get; set; } = false;
             [YamlMember(Order = 1306)] public string LimitRate { get; set; } = string.Empty;
             [YamlMember(Order = 1307)] public ModifiedType ModifiedType { get; set; } = ModifiedType.Modified;
+            [YamlMember(Order = 1308)] public PlayerClientType PlayerClient { get; set; } = PlayerClientType.WebEmbedded_Web_Tv;
 
             [Description("Options")]
             [YamlMember(Order = 1401)] public bool IsMonitor { get; set; } = false;

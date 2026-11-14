@@ -296,6 +296,7 @@ namespace yt_dlp_gui.Views {
             var dlp = new DLP(Data.Url);
             if (Data.NeedCookie) dlp.Cookie(Data.CookieType);
             dlp.Proxy(Data.ProxyUrl, Data.ProxyEnabled);
+            dlp.PlayerClient(Data.PlayerClient);
             dlp.GetInfo();
             if (!string.IsNullOrWhiteSpace(Data.selectedConfig.file)) {
                 dlp.LoadConfig(Data.selectedConfig.file);
@@ -529,6 +530,7 @@ namespace yt_dlp_gui.Views {
                         .MTime(Data.ModifiedType)
                         .Cookie(Data.CookieType, Data.NeedCookie)
                         .Proxy(Data.ProxyUrl, Data.ProxyEnabled)
+                        .PlayerClient(Data.PlayerClient)
                         .UseAria2(Data.UseAria2)
                         .LimitRate(Data.LimitRate)
                         .DownloadSections(Data.TimeRange)

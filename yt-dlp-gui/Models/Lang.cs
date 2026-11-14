@@ -182,6 +182,10 @@ namespace yt_dlp_gui.Models {
         [YamlMember(Order = 1153)] public string ModifiedCreated { get; set; } = "Created Date";
         [YamlMember(Order = 1153)] public string ModifiedUpload { get; set; } = "Upload Date";
 
+        [Description("Advance Tab - Player Client")]
+        [YamlMember(Order = 1156)] public string PlayerClient { get; set; } = "Player Client";
+        [YamlMember(Order = 1157)] public string PlayerClientDefault { get; set; } = "Default (yt-dlp)";
+
         [Description("Options Tab - Notifications")]
         [YamlMember(Order = 1161)] public string Notifications { get; set; } = "Notifications";
         [YamlMember(Order = 1162)] public string NotificationsEnabled { get; set; } = "Enabled";

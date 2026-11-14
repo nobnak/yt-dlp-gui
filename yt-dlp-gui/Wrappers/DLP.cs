@@ -83,6 +83,24 @@ namespace yt_dlp_gui.Wrappers {
             }
             return this;
         }
+        public DLP PlayerClient(PlayerClientType type) {
+            if (Type != DLPType.yd_dlp) return this;
+            var client = type switch {
+                PlayerClientType.WebEmbedded_Web_Tv => "web_embedded,web,tv",
+                PlayerClientType.Web => "web",
+                PlayerClientType.Android => "android",
+                PlayerClientType.Ios => "ios",
+                PlayerClientType.Tv => "tv",
+                PlayerClientType.Mweb => "mweb",
+                _ => null
+            };
+            if (client == null) {
+                Options.Remove("--extractor-args");
+            } else {
+                Options["--extractor-args"] = $"\"youtube:player_client={client}\"";
+            }
+            return this;
+        }
         /*
         public DLP ExtractAudio(string format = "") {
             Options["--extract-audio"] = "";
