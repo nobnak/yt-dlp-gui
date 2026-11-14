@@ -33,6 +33,10 @@ namespace yt_dlp_gui.Controls {
         private static void onTextChanged(DependencyObject dpo, DependencyPropertyChangedEventArgs e) {
             var d = (dpo as TextEditor);
             if (d != null) {
+                if (!d.Dispatcher.CheckAccess()) {
+                    d.Dispatcher.Invoke(() => onTextChanged(dpo, e));
+                    return;
+                }
                 var editor = d.textEditor;
                 if (editor.Document != null) {
                     var caretOffset = editor.CaretOffset;

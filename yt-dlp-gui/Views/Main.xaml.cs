@@ -302,13 +302,16 @@ namespace yt_dlp_gui.Views {
             }
             if (Data.UseOutput) dlp.Output(Data.FileNameFormat); //if not used config, default template
             ClearStatus();
-            dlp.Exec(null, std => {
+            var parsed = false;
+            var errLines = new List<string>();
+            var proc = dlp.Exec(null, std => {
                 if (string.IsNullOrWhiteSpace(std) || !std.TrimStart().StartsWith("{")) return;
                 try {
                     //取得JSON
                     Data.Video = JsonConvert.DeserializeObject<Video>(std, new JsonSerializerSettings() {
                         NullValueHandling = NullValueHandling.Ignore
                     }) ?? new Video();
+                    parsed = true;
 
                     //Reading Chapters
                     {
@@ -381,26 +384,50 @@ namespace yt_dlp_gui.Views {
                 } catch (Exception ex) {
                     App.Log($"[GETINFO PARSE ERROR] {ex}");
                     Debug.WriteLine(ex, "GetInfo Error");
+                    errLines.Add($"[PARSE ERROR] {ex.Message}");
                 }
             }, err => {
                 App.Log($"[GETINFO STDERR] {err}");
-            });
-            dlp.Err(DLP.DLPError.Sign, () => {
-                if (Data.UseCookie == UseCookie.WhenNeeded) {
-                    Data.NeedCookie = true;
-                    GetInfo();
-                } else if (Data.UseCookie == UseCookie.Ask) {
-                    var mb = System.Windows.Forms.MessageBox.Show(
-                        $"{App.Lang.Dialog.CookieRequired}\n",
-                        $"{App.AppName}",
-                        MessageBoxButtons.YesNo);
-
-                    if (mb == System.Windows.Forms.DialogResult.Yes) {
-                        Data.NeedCookie = true;
-                        GetInfo();
-                    }
+                var line = err.Trim();
+                if (!string.IsNullOrWhiteSpace(line) && !errLines.Contains(line)) {
+                    errLines.Add(line);
                 }
             });
+            var retrying = false;
+            if (!Data.NeedCookie) {
+                dlp.Err(DLP.DLPError.Sign, () => {
+                    if (Data.UseCookie == UseCookie.WhenNeeded) {
+                        Data.NeedCookie = true;
+                        retrying = true;
+                        GetInfo();
+                    } else if (Data.UseCookie == UseCookie.Ask) {
+                        var mb = System.Windows.Forms.MessageBox.Show(
+                            $"{App.Lang.Dialog.CookieRequired}\n",
+                            $"{App.AppName}",
+                            MessageBoxButtons.YesNo);
+
+                        if (mb == System.Windows.Forms.DialogResult.Yes) {
+                            Data.NeedCookie = true;
+                            retrying = true;
+                            GetInfo();
+                        }
+                    }
+                });
+            }
+            if (!retrying && (proc == null || proc.ExitCode != 0 || !parsed)) {
+                Data.DNStatus_Infos["Status"] = App.Lang.Status.Error;
+                var msg = proc == null
+                    ? $"Executable not found: '{DLP.Path_DLP}'"
+                    : string.Join(Environment.NewLine, errLines.Where(x => x.StartsWith("ERROR:", StringComparison.OrdinalIgnoreCase)));
+                if (string.IsNullOrWhiteSpace(msg)) {
+                    msg = errLines.Any()
+                        ? string.Join(Environment.NewLine, errLines)
+                        : $"Analyze failed (ExitCode: {proc?.ExitCode ?? -1})";
+                }
+                Data.Video = new Video() {
+                    description = msg
+                };
+            }
         }
         private void ClearStatus() {
             Data.DNStatus_Infos.Clear();

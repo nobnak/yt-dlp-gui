@@ -248,9 +248,9 @@
                     </controls:TextEditor.ContextMenu>
                 </controls:TextEditor>
                 <!-- Desc-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_ -->
-                <controls:TextEditor Grid.Row="2" Helper="{Binding Source={x:Static app:App.Lang}, Path=Main.Title}"
+                <controls:TextEditor Grid.Row="2" Helper="{Binding Source={x:Static app:App.Lang}, Path=Main.Desc}"
                              Margin="0,2" Syntax="desc"
-                             Multiline="True" EnableHyperlinks="True" IsReadOnly="True"
+                             Multiline="True" WordWrap="True" EnableHyperlinks="True" IsReadOnly="True"
                              Text="{Binding Video.description}">
                     <controls:TextEditor.ContextMenu>
                         <ContextMenu>
