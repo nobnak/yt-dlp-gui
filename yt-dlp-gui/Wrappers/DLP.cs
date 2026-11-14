@@ -83,21 +83,14 @@ namespace yt_dlp_gui.Wrappers {
             }
             return this;
         }
-        public DLP PlayerClient(PlayerClientType type) {
+        public DLP PlayerClient(string? clients) {
             if (Type != DLPType.yd_dlp) return this;
-            var client = type switch {
-                PlayerClientType.WebEmbedded_Web_Tv => "web_embedded,web,tv",
-                PlayerClientType.Web => "web",
-                PlayerClientType.Android => "android",
-                PlayerClientType.Ios => "ios",
-                PlayerClientType.Tv => "tv",
-                PlayerClientType.Mweb => "mweb",
-                _ => null
-            };
-            if (client == null) {
+            var list = (clients ?? string.Empty)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (list.Length == 0) {
                 Options.Remove("--extractor-args");
             } else {
-                Options["--extractor-args"] = $"\"youtube:player_client={client}\"";
+                Options["--extractor-args"] = $"\"youtube:player_client={string.Join(",", list)}\"";
             }
             return this;
         }

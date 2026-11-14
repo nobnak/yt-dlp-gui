@@ -59,6 +59,7 @@ namespace yt_dlp_gui.Views {
                             break;
                     }
                 };
+                InitPlayerClients();
                 PropertyChanged += SelfData_PropertyChanged;
             }
             private Regex _isComment = new Regex(@"^\s*#");
@@ -114,6 +115,9 @@ namespace yt_dlp_gui.Views {
                         break;
                     case nameof(ImageWidth):
                         ImageHeight = ImageWidth * 0.5625d;
+                        break;
+                    case nameof(PlayerClient):
+                        SyncPlayerClientItems();
                         break;
                 }
                 CheckEnable();
@@ -277,7 +281,35 @@ namespace yt_dlp_gui.Views {
             public bool EmbedChapters { get; set; } = false;
             public bool EmbedSubtitles { get; set; } = false;
             public ModifiedType ModifiedType { get; set; } = ModifiedType.Modified;
-            public PlayerClientType PlayerClient { get; set; } = PlayerClientType.WebEmbedded_Web_Tv;
+            public string PlayerClient { get; set; } = DefaultPlayerClient;
+            public List<PlayerClientItem> PlayerClientItems { get; } = new();
+            private bool _syncingPlayerClient = false;
+            private void InitPlayerClients() {
+                string[] presets = { "web_embedded", "web", "tv", "android", "ios", "mweb" };
+                foreach (var name in presets) {
+                    var item = new PlayerClientItem { Name = name };
+                    item.PropertyChanged += (_, e) => {
+                        if (_syncingPlayerClient || e.PropertyName != nameof(PlayerClientItem.IsChecked)) return;
+                        _syncingPlayerClient = true;
+                        PlayerClient = string.Join(",", PlayerClientItems.Where(x => x.IsChecked).Select(x => x.Name));
+                        _syncingPlayerClient = false;
+                    };
+                    PlayerClientItems.Add(item);
+                }
+                SyncPlayerClientItems();
+            }
+            private void SyncPlayerClientItems() {
+                if (_syncingPlayerClient) return;
+                _syncingPlayerClient = true;
+                var selected = (PlayerClient ?? string.Empty)
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                foreach (var item in PlayerClientItems) {
+                    item.IsChecked = selected.Contains(item.Name);
+                }
+                _syncingPlayerClient = false;
+            }
+            private const string DefaultPlayerClient = "web_embedded,web,tv";
             public string TimeRange { get; set; } = string.Empty;
             public string LimitRate { get; set; } = string.Empty;
             public Enable Enable { get; set; } = new();
@@ -454,7 +486,7 @@ namespace yt_dlp_gui.Views {
             [YamlMember(Order = 1305)] public bool EmbedSubtitles { get; set; } = false;
             [YamlMember(Order = 1306)] public string LimitRate { get; set; } = string.Empty;
             [YamlMember(Order = 1307)] public ModifiedType ModifiedType { get; set; } = ModifiedType.Modified;
-            [YamlMember(Order = 1308)] public PlayerClientType PlayerClient { get; set; } = PlayerClientType.WebEmbedded_Web_Tv;
+            [YamlMember(Order = 1308)] public string PlayerClient { get; set; } = "web_embedded,web,tv";
 
             [Description("Options")]
             [YamlMember(Order = 1401)] public bool IsMonitor { get; set; } = false;

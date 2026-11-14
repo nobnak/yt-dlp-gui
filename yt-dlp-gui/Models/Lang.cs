@@ -184,7 +184,6 @@ namespace yt_dlp_gui.Models {
 
         [Description("Advance Tab - Player Client")]
         [YamlMember(Order = 1156)] public string PlayerClient { get; set; } = "Player Client";
-        [YamlMember(Order = 1157)] public string PlayerClientDefault { get; set; } = "Default (yt-dlp)";
 
         [Description("Options Tab - Notifications")]
         [YamlMember(Order = 1161)] public string Notifications { get; set; } = "Notifications";

@@ -691,16 +691,18 @@
                 </ComboBox>
                 <!--PlayerClient-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_ -->
                 <TextBlock Grid.Row="8" Text="{Binding Source={x:Static app:App.Lang}, Path=Main.PlayerClient}" VerticalAlignment="Center" HorizontalAlignment="Right"/>
-                <ComboBox Grid.Row="8" Grid.Column="2" SelectedValue="{Binding PlayerClient}" SelectedValuePath="Tag" HorizontalAlignment="Left" Margin="0,2">
-                    <ComboBoxItem Content="web_embedded,web,tv" Tag="{x:Static m:PlayerClientType.WebEmbedded_Web_Tv}"/>
-                    <ComboBoxItem Content="{Binding Source={x:Static app:App.Lang}, Path=Main.PlayerClientDefault}" Tag="{x:Static m:PlayerClientType.Default}"/>
-                    <Separator/>
-                    <ComboBoxItem Content="android" Tag="{x:Static m:PlayerClientType.Android}"/>
-                    <ComboBoxItem Content="web" Tag="{x:Static m:PlayerClientType.Web}"/>
-                    <ComboBoxItem Content="ios" Tag="{x:Static m:PlayerClientType.Ios}"/>
-                    <ComboBoxItem Content="tv" Tag="{x:Static m:PlayerClientType.Tv}"/>
-                    <ComboBoxItem Content="mweb" Tag="{x:Static m:PlayerClientType.Mweb}"/>
-                </ComboBox>
+                <ItemsControl Grid.Row="8" Grid.Column="2" ItemsSource="{Binding PlayerClientItems}" Margin="0,2" VerticalAlignment="Center">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <CheckBox Content="{Binding Name}" IsChecked="{Binding IsChecked}" Margin="0,2,12,2"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </Grid>
         </TabItem>
         <TabItem Header="{Binding Source={x:Static app:App.Lang}, Path=Main.Options}">
