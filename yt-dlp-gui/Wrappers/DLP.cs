@@ -52,7 +52,6 @@ namespace yt_dlp_gui.Wrappers {
                 Options["--windows-filenames"] = "";
                 Options["--js-runtimes"] = "node";
                 Options["--newline"] = "";
-                Options["--extractor-args"] = "\"youtube:player_client=web_embedded,web,tv\"";
             }
         }
         public DLP LoadConfig(string path) {
